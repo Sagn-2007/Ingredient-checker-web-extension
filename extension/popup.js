@@ -127,7 +127,14 @@ document.addEventListener("DOMContentLoaded", () => {
   loadProfile();
   loadHistory();
 
-  document.getElementById("save-profile-btn").addEventListener("click", saveProfile);
+  document.getElementById("manage-profiles-btn").addEventListener("click", openManageProfiles);
+  document.getElementById("save-custom-profile-btn").addEventListener("click", saveCustomProfile);
+  document.getElementById("cancel-custom-profile-btn").addEventListener("click", closeManageProfiles);
+  document.getElementById("delete-custom-profile-btn").addEventListener("click", deleteCustomProfile);
+  
+  document.getElementById("diet-select").addEventListener("change", handleDietChange);
+  document.getElementById("lang-select").addEventListener("change", saveLanguage);
+  
   document.getElementById("check-btn").addEventListener("click", checkProductFromPage);
   document.getElementById("manual-check-btn").addEventListener("click", checkProductManual);
   
@@ -242,10 +249,46 @@ function applyTranslations(language) {
   el("ui-analysis-source-title", t.ingredient_source_title);
 }
 
+const BUILT_IN_PROFILES = [
+    { name: "Vegetarian", avoid: "" },
+    { name: "Vegan", avoid: "" },
+    { name: "Jain", avoid: "" }
+];
+
 function loadProfile() {
-  chrome.storage.local.get(["diet", "alsoAvoid", "language"], (res) => {
-    if (res.diet) document.getElementById("diet-select").value = res.diet;
-    if (res.alsoAvoid) document.getElementById("custom-avoid").value = res.alsoAvoid;
+  chrome.storage.local.get(["diet", "alsoAvoid", "language", "customProfiles"], (res) => {
+    const dietSelect = document.getElementById("diet-select");
+    dietSelect.innerHTML = "";
+    
+    const optGroupBuiltin = document.createElement("optgroup");
+    optGroupBuiltin.label = "Built-in Profiles";
+    BUILT_IN_PROFILES.forEach(p => {
+        const option = document.createElement("option");
+        option.value = p.name;
+        option.innerText = p.name;
+        optGroupBuiltin.appendChild(option);
+    });
+    dietSelect.appendChild(optGroupBuiltin);
+
+    const customProfiles = res.customProfiles || [];
+    if (customProfiles.length > 0) {
+        const optGroupCustom = document.createElement("optgroup");
+        optGroupCustom.label = "Custom Profiles";
+        customProfiles.forEach(p => {
+            const option = document.createElement("option");
+            option.value = p.name;
+            option.innerText = p.name;
+            optGroupCustom.appendChild(option);
+        });
+        dietSelect.appendChild(optGroupCustom);
+    }
+
+    if (res.diet) {
+        dietSelect.value = res.diet;
+    } else {
+        dietSelect.value = "Vegetarian";
+    }
+
     if (res.language) {
         document.getElementById("lang-select").value = res.language;
         applyTranslations(res.language);
@@ -253,17 +296,139 @@ function loadProfile() {
   });
 }
 
-function saveProfile() {
-  const diet = document.getElementById("diet-select").value;
-  const alsoAvoid = document.getElementById("custom-avoid").value;
-  const language = document.getElementById("lang-select").value;
+function handleDietChange() {
+    const diet = document.getElementById("diet-select").value;
+    
+    chrome.storage.local.get(["customProfiles"], (res) => {
+        const customProfiles = res.customProfiles || [];
+        const customProfile = customProfiles.find(p => p.name === diet);
+        
+        let alsoAvoid = "";
+        if (customProfile) {
+            alsoAvoid = customProfile.avoid;
+        }
 
-  chrome.storage.local.set({ diet, alsoAvoid, language }, () => {
-    const status = document.getElementById("save-status");
-    status.classList.remove("hidden");
-    setTimeout(() => status.classList.add("hidden"), 2000);
-    applyTranslations(language);
-  });
+        chrome.storage.local.set({ diet, alsoAvoid }, () => {
+             const status = document.getElementById("save-status");
+             status.innerText = "Profile active!";
+             status.classList.remove("hidden");
+             setTimeout(() => status.classList.add("hidden"), 1500);
+        });
+    });
+}
+
+function saveLanguage() {
+    const language = document.getElementById("lang-select").value;
+    chrome.storage.local.set({ language }, () => {
+        applyTranslations(language);
+        const status = document.getElementById("save-status");
+        status.innerText = "Language saved!";
+        status.classList.remove("hidden");
+        setTimeout(() => status.classList.add("hidden"), 1500);
+    });
+}
+
+function openManageProfiles() {
+    const section = document.getElementById("manage-profiles-section");
+    section.classList.remove("hidden");
+    
+    const currentDiet = document.getElementById("diet-select").value;
+    const isBuiltin = BUILT_IN_PROFILES.some(p => p.name === currentDiet);
+    
+    if (isBuiltin) {
+        document.getElementById("custom-profile-name").value = "";
+        document.getElementById("custom-profile-avoid").value = "";
+        document.getElementById("delete-profile-container").classList.add("hidden");
+    } else {
+        document.getElementById("custom-profile-name").value = currentDiet;
+        chrome.storage.local.get(["customProfiles"], (res) => {
+            const customProfiles = res.customProfiles || [];
+            const profile = customProfiles.find(p => p.name === currentDiet);
+            if (profile) {
+                document.getElementById("custom-profile-avoid").value = profile.avoid;
+            }
+        });
+        document.getElementById("delete-profile-container").classList.remove("hidden");
+    }
+}
+
+function closeManageProfiles() {
+    document.getElementById("manage-profiles-section").classList.add("hidden");
+}
+
+function saveCustomProfile() {
+    const nameInput = document.getElementById("custom-profile-name").value.trim();
+    const avoidInput = document.getElementById("custom-profile-avoid").value.trim();
+    
+    if (!nameInput) {
+        alert("Please enter a profile name.");
+        return;
+    }
+    
+    if (BUILT_IN_PROFILES.some(p => p.name.toLowerCase() === nameInput.toLowerCase())) {
+        alert("Cannot overwrite a built-in profile name.");
+        return;
+    }
+    
+    // Deduplicate avoid rules
+    const avoidList = avoidInput.split(",")
+        .map(s => s.trim().toLowerCase())
+        .filter(s => s.length > 0);
+    const uniqueAvoid = [...new Set(avoidList)].join(", ");
+    
+    chrome.storage.local.get(["customProfiles"], (res) => {
+        let customProfiles = res.customProfiles || [];
+        const existingIdx = customProfiles.findIndex(p => p.name.toLowerCase() === nameInput.toLowerCase());
+        
+        const newProfile = { name: nameInput, avoid: uniqueAvoid };
+        
+        if (existingIdx >= 0) {
+            customProfiles[existingIdx] = newProfile;
+        } else {
+            customProfiles.push(newProfile);
+        }
+        
+        chrome.storage.local.set({ 
+            customProfiles,
+            diet: newProfile.name,
+            alsoAvoid: newProfile.avoid
+        }, () => {
+            loadProfile();
+            closeManageProfiles();
+            const status = document.getElementById("save-status");
+            status.innerText = "Profile saved!";
+            status.classList.remove("hidden");
+            setTimeout(() => status.classList.add("hidden"), 1500);
+        });
+    });
+}
+
+function deleteCustomProfile() {
+    const nameInput = document.getElementById("custom-profile-name").value.trim();
+    if (!nameInput) return;
+    
+    if (!confirm(`Are you sure you want to delete the profile "${nameInput}"?`)) return;
+    
+    chrome.storage.local.get(["customProfiles", "diet"], (res) => {
+        let customProfiles = res.customProfiles || [];
+        customProfiles = customProfiles.filter(p => p.name.toLowerCase() !== nameInput.toLowerCase());
+        
+        let nextDiet = res.diet;
+        let nextAvoid = "";
+        
+        if (res.diet.toLowerCase() === nameInput.toLowerCase()) {
+            nextDiet = "Vegetarian";
+        }
+        
+        chrome.storage.local.set({ 
+            customProfiles,
+            diet: nextDiet,
+            alsoAvoid: nextAvoid
+        }, () => {
+            loadProfile();
+            closeManageProfiles();
+        });
+    });
 }
 
 async function checkProductFromPage() {
@@ -970,7 +1135,7 @@ function displayResult(data, ingredientsList, allergens, language) {
     
     let healthWarningHtml = "";
     if (item.health_warning) {
-        healthWarningHtml = `<div style="margin-top: 8px; color: #c62828;"><strong>🏥 Health Warning:</strong><br>${item.health_warning}</div>`;
+        healthWarningHtml = `<div style="margin-top: 8px; color: #c62828;"><strong>ℹ️ Health Note:</strong><br>${item.health_warning}</div>`;
     }
 
     body.innerHTML = `

@@ -67,19 +67,10 @@
 
   <div id="profile-section" class="section">
     <h3 id="ui-diet-profile">👤 DIET PROFILE</h3>
-    <label>
-      <span id="ui-diet-label">Diet:</span>
-      <select id="diet-select">
-        <option value="Vegetarian">Vegetarian</option>
-        <option value="Vegan">Vegan</option>
-        <option value="Jain">Jain</option>
-      </select>
-    </label>
-    
-    <label>
-      <span id="ui-also-avoid-label">Also avoid (comma-separated):</span>
-      <input type="text" id="custom-avoid" placeholder="e.g. peanuts, coconut, caffeine">
-    </label>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <select id="diet-select" style="flex: 1; margin-right: 10px;"></select>
+        <button id="manage-profiles-btn" style="padding: 4px 8px; font-size: 12px; cursor: pointer;">Manage Profiles</button>
+    </div>
     
     <label>
       <span id="ui-language-label">Language:</span>
@@ -90,8 +81,27 @@
       </select>
     </label>
     
-    <button id="save-profile-btn">Save Profile</button>
+    <button id="save-profile-btn" class="hidden">Save Profile</button>
     <div id="save-status" class="status-msg hidden">Saved!</div>
+  </div>
+
+  <div id="manage-profiles-section" class="section hidden" style="background: #f9f9f9; border: 1px solid #ddd; padding: 12px; margin-bottom: 12px; border-radius: 6px;">
+    <h3 style="margin-top: 0;">Create Diet Profile</h3>
+    <label>
+      <span style="font-size: 13px;">Profile name:</span>
+      <input type="text" id="custom-profile-name" placeholder="e.g. Dad's Diet" style="width: 100%; margin-bottom: 8px;">
+    </label>
+    <label>
+      <span style="font-size: 13px;">Ingredients / substances to avoid (comma-separated):</span>
+      <input type="text" id="custom-profile-avoid" placeholder="e.g. peanuts, dairy, artificial dyes" style="width: 100%; margin-bottom: 8px;">
+    </label>
+    <div style="display: flex; gap: 8px;">
+      <button id="save-custom-profile-btn" style="background: #4caf50; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Create Profile</button>
+      <button id="cancel-custom-profile-btn" style="background: #ccc; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Cancel</button>
+    </div>
+    <div id="delete-profile-container" class="hidden" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+      <button id="delete-custom-profile-btn" style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">Delete Profile</button>
+    </div>
   </div>
 
   <div id="how-it-works-section" class="section">

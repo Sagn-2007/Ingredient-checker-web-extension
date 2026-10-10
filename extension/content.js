@@ -1,10 +1,29 @@
 // content.js
-(async function() {
-  if (window.hasRunLabelCheckerWidget) return;
-  window.hasRunLabelCheckerWidget = true;
+(function() {
+  if (window.hasRunLabelCheckerWidgetInit) return;
+  window.hasRunLabelCheckerWidgetInit = true;
 
-  // wait for a bit to let SPA pages load
-  setTimeout(runExtraction, 2500);
+  let lastUrl = location.href;
+  let scanTimeout = null;
+
+  function scheduleScan(delay = 2500) {
+      if (scanTimeout) clearTimeout(scanTimeout);
+      scanTimeout = setTimeout(runExtraction, delay);
+  }
+
+  // Monitor SPA URL changes
+  const observer = new MutationObserver(() => {
+      if (location.href !== lastUrl) {
+          lastUrl = location.href;
+          const existing = document.getElementById('ing-label-checker-widget');
+          if (existing) existing.remove();
+          scheduleScan();
+      }
+  });
+  observer.observe(document, { subtree: true, childList: true });
+
+  // Initial scan
+  scheduleScan();
 
   async function runExtraction() {
     let productName = "Unknown Product";
@@ -221,7 +240,7 @@
     widget.style.backgroundColor = bg;
     widget.style.color = color;
     widget.style.border = `1px solid ${color}`;
-    widget.innerHTML = `${icon} ${diet}: ${text}`;
+    widget.innerText = `${icon} ${diet}: ${text}`;
 
     widget.addEventListener('mouseenter', () => { widget.style.transform = 'scale(1.05)'; });
     widget.addEventListener('mouseleave', () => { widget.style.transform = 'scale(1)'; });

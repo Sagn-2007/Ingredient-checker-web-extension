@@ -18,13 +18,17 @@ The MVP already successfully implemented:
 **User Problem Solved:** Users often want to avoid an entire category (e.g., "dairy") but the ingredient list contains a derivative (e.g., "casein" or "whey"). Naive substring matching fails here.
 **Implementation:** We upgraded the OpenRouter LLM prompt in the backend to dynamically evaluate the user's `also_avoid` list against ingredients, using reasoning to catch non-obvious derivatives. We also improved the deterministic custom rule matcher using regex word boundaries (`\b`) to prevent false positives (e.g., avoiding "pea" shouldn't flag "peanut").
 
-### 2. Health & Toxicity Warnings
-**User Problem Solved:** A product might fit a diet (e.g., Vegan) but still be unhealthy (e.g., containing Red 40 or excessive ultra-processed elements).
-**Implementation:** The LLM prompt was modified to output a `health_warning` field. The frontend `popup.js` was updated to render these warnings prominently with a 🏥 icon when potentially toxic dyes, harmful preservatives, or extreme processing are detected.
+### 2. Health & Processing Notes
+**User Problem Solved:** A product might fit a diet (e.g., Vegan) but still contain controversial additives (e.g., Red 40 or excessive ultra-processed elements).
+**Implementation:** The LLM prompt was modified to output an informational `health_warning` field. The frontend `popup.js` was updated to render these notes prominently with an ℹ️ icon when potentially controversial dyes, artificial preservatives, or extreme processing are detected. It is designed to provide context, not definitive medical diagnoses.
 
 ### 3. On-Page Auto-Scanning Widget (Content Script)
 **User Problem Solved:** Users had to manually open the popup to check a product.
 **Implementation:** We created `content.js`, an intelligent background script that automatically scrapes DOM text on page load, queries the backend, and injects a subtle floating UI badge (e.g., "🟢 Vegan: FITS") directly onto the shopping webpage. This creates a zero-click, seamless shopping experience.
+
+### 4. Personalized Custom Diet Profiles
+**User Problem Solved:** The original application only offered three static profiles (Vegetarian, Vegan, Jain). Users with complex allergies or specific preferences (e.g., "Dad's Diet" avoiding sugar, dairy, and peanuts) had to constantly re-type their custom avoid lists.
+**Implementation:** Users can now create, name, edit, and delete their own permanent diet profiles. The active profile's name (e.g., "🟢 Dad's Diet: FITS") seamlessly integrates into the floating zero-click widget and the backend. The custom profile name dynamically sets the `diet` variable without requiring a parallel backend logic path, maintaining architectural simplicity.
 
 ## Architecture
 The architecture remains heavily privacy-focused and edge-first:
@@ -52,7 +56,7 @@ The architecture remains heavily privacy-focused and edge-first:
 
 ## Demo Flow
 1. **Seamless Experience:** Navigate to an Amazon food product page. Without clicking anything, the bottom-right floating widget appears saying "🟢 Vegan: FITS".
-2. **Health Warnings:** Open a product containing "Red 40". Click the extension, and show the 🏥 Health Warning under the ingredient analysis.
+2. **Health Notes:** Open a product containing "Red 40". Click the extension, and show the ℹ️ Health Note under the ingredient analysis.
 3. **Smart Profiling:** Add "dairy" to the "Also avoid" list in the extension. Scan a product containing "casein". The LLM will flag it correctly despite no exact string match.
 4. **Privacy & Edge OCR:** Right-click an ingredient image on a webpage and click "Scan image for ingredients". Watch the local OCR process the image without uploading it to a cloud vision API.
 

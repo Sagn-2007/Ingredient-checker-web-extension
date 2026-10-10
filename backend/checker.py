@@ -171,12 +171,12 @@ Rules:
 - "doubtful": ONLY when the actual source genuinely cannot be determined (e.g., "natural flavors" which could be animal or plant).
 - Do NOT mark something doubtful just because it has a generic name. Vitamins added to cereal are usually plant/synthetic — classify them "fits" for vegetarian unless you have a specific reason for conflict.
 - Common synthetic additives (citric acid, ascorbic acid, tocopherol) are generally "fits".
-- If the ingredient is a known ultra-processed chemical, toxic artificial dye (e.g., Red 40, Tartrazine), or excessive hidden sugar, provide a short 1-sentence health warning in the "health_warning" field. Otherwise omit it.
+- If the ingredient is a commonly debated artificial additive, synthetic dye (e.g., Red 40, Tartrazine), or highly processed component, provide a short 1-sentence informational health note in the "health_warning" field explaining why some consumers choose to limit it. Do NOT make definitive medical claims, and do NOT call it "toxic" or "unsafe". Otherwise omit it.
 
 Return ONLY valid JSON in this exact format:
 {{
   "results": [
-    {{"id": "<id>", "status": "fits|doubtful|conflicts", "reason": "<short explanation>", "health_warning": "<optional health warning>"}}
+    {{"id": "<id>", "status": "fits|doubtful|conflicts", "reason": "<short explanation>", "health_warning": "<optional health note>"}}
   ]
 }}"""
 

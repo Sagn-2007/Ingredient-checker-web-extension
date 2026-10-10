@@ -10,9 +10,9 @@ It uses a deterministic rules engine for known ingredients and leverages Google 
 
 ## 2. Features
 
-- **Vegan, Vegetarian, Jain checking**: Supports multiple dietary preferences out of the box.
+- **Personalized Custom Diet Profiles**: Create your own named diets (e.g., "Dad's Diet") with saved avoid lists, alongside built-in Vegan, Vegetarian, and Jain profiles.
 - **Smart Custom Profiling (LLM-based)**: Users can add items they want to avoid (e.g., "dairy"), and the AI intelligently catches derivatives (e.g., "casein").
-- **Health & Toxicity Warnings**: Flags ingredients known to be toxic, ultra-processed, or harmful (e.g., Red 40).
+- **Health & Processing Notes**: Flags ingredients known to be heavily debated artificial additives or highly processed components.
 - **On-Page Auto-Scanning Widget**: A floating badge automatically appears on product pages with the verdict—no clicks required!
 - **Gemini/OpenRouter classification**: Uses generative AI to classify ingredients not in the local database.
 - **Automatic ingredient extraction**: Automatically finds and extracts product names and ingredients from standard online store pages.
