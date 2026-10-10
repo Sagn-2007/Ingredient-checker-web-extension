@@ -11,11 +11,12 @@ It uses a deterministic rules engine for known ingredients and leverages Google 
 ## 2. Features
 
 - **Vegan, Vegetarian, Jain checking**: Supports multiple dietary preferences out of the box.
-- **Custom exclusions**: Users can add specific items they want to avoid (e.g., peanuts, caffeine).
-- **Gemini classification**: Uses generative AI to classify ingredients not in the local database.
+- **Smart Custom Profiling (LLM-based)**: Users can add items they want to avoid (e.g., "dairy"), and the AI intelligently catches derivatives (e.g., "casein").
+- **Health & Toxicity Warnings**: Flags ingredients known to be toxic, ultra-processed, or harmful (e.g., Red 40).
+- **On-Page Auto-Scanning Widget**: A floating badge automatically appears on product pages with the verdict—no clicks required!
+- **Gemini/OpenRouter classification**: Uses generative AI to classify ingredients not in the local database.
 - **Automatic ingredient extraction**: Automatically finds and extracts product names and ingredients from standard online store pages.
 - **Manual fallback**: If extraction fails, users can manually paste an ingredient list.
-- **Product-page badge**: Injects a clean badge near the product title with the overall verdict.
 - **Scan history**: Remembers the last 10 products checked in the current session.
 - **Multilingual support**: Output is available in English, Hindi, and Bengali.
 

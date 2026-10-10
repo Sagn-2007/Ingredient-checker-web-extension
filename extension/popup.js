@@ -968,9 +968,15 @@ function displayResult(data, ingredientsList, allergens, language) {
         suggestedActionHtml = `<div style="margin-top: 8px;"><strong>💡 What should I do?</strong><br>Check the manufacturer's website for the ingredient source.</div>`;
     }
     
+    let healthWarningHtml = "";
+    if (item.health_warning) {
+        healthWarningHtml = `<div style="margin-top: 8px; color: #c62828;"><strong>🏥 Health Warning:</strong><br>${item.health_warning}</div>`;
+    }
+
     body.innerHTML = `
       <div><strong>Status:</strong><br>${statusText}</div>
       <div style="margin-top: 8px;"><strong>Reason:</strong><br>${item.reason}</div>
+      ${healthWarningHtml}
       ${suggestedActionHtml}
       <div style="margin-top: 8px;"><strong>Source:</strong><br>${getSourceTranslation(item.source, t)}</div>
     `;

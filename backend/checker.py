@@ -80,14 +80,16 @@ def check_product(
 
         ing_sing = singular(ing_norm)
 
-        # 1. Custom avoid list
+        # 1. Custom avoid list (Deterministic strict word boundary)
         matched_custom = False
+        import re
         for avoid in custom_avoid:
-            if avoid in ing_norm:
+            if re.search(r'\b' + re.escape(avoid) + r'\b', ing_norm):
                 flagged_ingredients.append({
                     "ingredient": original_ing,
                     "status": "conflicts",
                     "reason": f'Matches your custom "also avoid" item: "{avoid}".',
+                    "health_warning": "",
                     "source": "custom"
                 })
                 matched_custom = True
@@ -118,6 +120,7 @@ def check_product(
                 "ingredient": original_ing,
                 "status": status,
                 "reason": reason,
+                "health_warning": matched_rule.get('health_warning', ''),
                 "source": "rules"
             })
             continue
@@ -141,6 +144,7 @@ def check_product(
                     "ingredient": ing,
                     "status": "doubtful",
                     "reason": "AI classification unavailable — could not determine ingredient source.",
+                    "health_warning": "",
                     "source": "system"
                 })
         else:
@@ -150,9 +154,11 @@ def check_product(
 
                 unknown_ingredients_with_ids = [{"id": str(idx), "name": ing} for idx, ing in enumerate(unknown_ingredients)]
                 ingredients_json_str = json.dumps(unknown_ingredients_with_ids)
-                prompt = f"""You are classifying food ingredients for a dietary preference check.
+                custom_avoid_str = f"\nCustom Avoid List (Allergies/Preferences): {', '.join(custom_avoid)}" if custom_avoid else ""
+                
+                prompt = f"""You are an advanced food safety and dietary AI classifying ingredients.
 
-Diet: {diet}
+Diet: {diet}{custom_avoid_str}
 
 Ingredients to classify:
 {ingredients_json_str}
@@ -161,14 +167,16 @@ Rules:
 - Classify each ingredient independently.
 - "fits": clearly plant-derived, mineral-derived, or otherwise safe for the diet.
 - "conflicts": clearly animal-derived or otherwise prohibited for the diet.
+- If a Custom Avoid List is provided, explicitly mark any ingredient derived from or strongly related to those items as "conflicts".
 - "doubtful": ONLY when the actual source genuinely cannot be determined (e.g., "natural flavors" which could be animal or plant).
 - Do NOT mark something doubtful just because it has a generic name. Vitamins added to cereal are usually plant/synthetic — classify them "fits" for vegetarian unless you have a specific reason for conflict.
 - Common synthetic additives (citric acid, ascorbic acid, tocopherol) are generally "fits".
+- If the ingredient is a known ultra-processed chemical, toxic artificial dye (e.g., Red 40, Tartrazine), or excessive hidden sugar, provide a short 1-sentence health warning in the "health_warning" field. Otherwise omit it.
 
 Return ONLY valid JSON in this exact format:
 {{
   "results": [
-    {{"id": "<id>", "status": "fits|doubtful|conflicts", "reason": "<short explanation>"}}
+    {{"id": "<id>", "status": "fits|doubtful|conflicts", "reason": "<short explanation>", "health_warning": "<optional health warning>"}}
   ]
 }}"""
 
@@ -210,6 +218,7 @@ Return ONLY valid JSON in this exact format:
                             "ingredient": ing,
                             "status": status,
                             "reason": res.get('reason', 'Classified by AI.'),
+                            "health_warning": res.get('health_warning', ''),
                             "source": "openrouter"
                         })
                     else:
